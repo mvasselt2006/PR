@@ -10,9 +10,11 @@ import torchvision.transforms as transforms
 
 import os
 import argparse
+import numpy as np
 
 from models import *
 from utils import progress_bar
+from utils import get_output
 #import matplotlib.pyplot as plt
 
 
@@ -21,6 +23,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--epochs','-e',default=50, type=int, help='Total amount of epochs' )
+parser.add_argument('--job_id',type=str,help='Job_id to write output files to')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -66,7 +69,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.pth')
+    checkpoint = torch.load(f'./checkpoint/{args.job_id}_ckpt.pth')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -100,7 +103,7 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
+    train_result[epoch,:2]=[train_loss,correct/total]
 
 def test(epoch):
     global best_acc
@@ -121,7 +124,7 @@ def test(epoch):
 
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
+    train_result[epoch,2:]=[test_loss,correct/total]
     # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
@@ -133,13 +136,21 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        job_id=args.job_id
+        torch.save(state, f'./checkpoint/{job_id}_ckpt.pth')
 
         best_acc = acc
 
 if __name__ == "__main__":
     tot_epoch= args.epochs
-    for epoch in range(start_epoch, tot_epoch-start_epoch):
+    train_result=np.zeros((tot_epoch,4)) #Save epoch data
+    for epoch in range(start_epoch, tot_epoch+start_epoch):
         train(epoch)
         test(epoch)
         #scheduler.step()
+    job_id=args.job_id
+    #Define output dir
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+    np.savetxt("./output/{job_id}_result.csv", train_result, delimiter=",")
+    get_output(job_id,net,testloader,classes)

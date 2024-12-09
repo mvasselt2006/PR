@@ -7,7 +7,11 @@ import os
 import sys
 import time
 import math
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+import torch
 import torch.nn as nn
 import torch.nn.init as init
 
@@ -123,4 +127,50 @@ def format_time(seconds):
     if f == '':
         f = '0ms'
     return f
+
+def get_output(job_id,model,testloader,classes):
+    #Get training graph
+    train_loss,train_acc,test_loss,test_acc= np.loadtxt(f"./output/{job_id}_result.csv", unpack=True)
+    epochs=np.arange(0,np.shape(test_acc)[0]+1,1)
+    fig= plt.figure()
+    ax=fig.subplots()
+    ax.plot(epochs,train_loss,label="training loss")
+    ax.plot(epochs, train_acc, label="training accuracy")
+    ax.plot(epochs,test_loss,label="test loss")
+    ax.plot(epochs, test_acc, label="test accuracy")
+    ax.set_title("Training performance over epochs")
+    ax.legend()
+    fig.savefig(f'./output/{job_id}_trainfig.png')
+
+    #Get confusion matrix
+
+    #Load model
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    checkpoint = torch.load(f'./checkpoint/{job_id}_ckpt.pth')
+    model.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    best_epoch = checkpoint['epoch']
+
+    model.eval()
+    y_test = []
+    predictions = []
+    with torch.no_grad():
+        for (inputs, targets) in testloader:
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = model(inputs)
+            _, predicted = outputs.max(1)
+            y_test.append(targets)
+            predictions.append(predicted)
+        
+    cm = confusion_matrix(y_test, predictions)
+    ConfusionMatrixDisplay(cm).plot()
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=classes)
+    disp.set_title(f"Model with accuracy {best_acc*100}%")
+    disp.plot().figure_.savefig(f'{job_id}_confusion_matrix.png')
+
+
+
+
+
+
 
