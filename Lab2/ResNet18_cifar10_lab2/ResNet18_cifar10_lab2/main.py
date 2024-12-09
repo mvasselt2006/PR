@@ -152,5 +152,5 @@ if __name__ == "__main__":
     #Define output dir
     if not os.path.isdir('output'):
         os.mkdir('output')
-    np.savetxt("./output/{job_id}_result.csv", train_result, delimiter=",")
+    np.savetxt(f"./output/{job_id}_result.csv", train_result, delimiter=",")
     get_output(job_id,net,testloader,classes)

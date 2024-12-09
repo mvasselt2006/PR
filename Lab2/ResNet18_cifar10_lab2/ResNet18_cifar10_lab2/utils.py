@@ -9,7 +9,7 @@ import time
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import multilabel_confusion_matrix, ConfusionMatrixDisplay
 
 import torch
 import torch.nn as nn
@@ -130,8 +130,8 @@ def format_time(seconds):
 
 def get_output(job_id,model,testloader,classes):
     #Get training graph
-    train_loss,train_acc,test_loss,test_acc= np.loadtxt(f"./output/{job_id}_result.csv", unpack=True)
-    epochs=np.arange(0,np.shape(test_acc)[0]+1,1)
+    train_loss,train_acc,test_loss,test_acc= np.loadtxt(f"./output/{job_id}_result.csv", unpack=True,delimiter=',')
+    epochs=np.arange(0,np.shape(test_acc)[0],1)
     fig= plt.figure()
     ax=fig.subplots()
     ax.plot(epochs,train_loss,label="training loss")
@@ -159,13 +159,12 @@ def get_output(job_id,model,testloader,classes):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
             _, predicted = outputs.max(1)
-            y_test.append(targets)
-            predictions.append(predicted)
-        
-    cm = confusion_matrix(y_test, predictions)
-    ConfusionMatrixDisplay(cm).plot()
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=classes)
-    disp.set_title(f"Model with accuracy {best_acc*100}%")
+            for target_i, pred_i in zip(targets,predicted):
+                y_test.append(int(target_i))
+                predictions.append(int(pred_i))
+       
+    pred_labels=np.arange(0,10,1)
+    disp= ConfusionMatrixDisplay.from_predictions(y_test,predictions,labels=pred_labels,display_labels=classes)
     disp.plot().figure_.savefig(f'{job_id}_confusion_matrix.png')
 
 
