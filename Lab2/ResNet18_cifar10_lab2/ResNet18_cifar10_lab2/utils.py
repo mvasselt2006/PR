@@ -134,12 +134,15 @@ def get_output(job_id,model,testloader,classes):
     epochs=np.arange(0,np.shape(test_acc)[0],1)
     fig= plt.figure()
     ax=fig.subplots()
-    ax.plot(epochs,train_loss,label="training loss")
-    ax.plot(epochs, train_acc, label="training accuracy")
-    ax.plot(epochs,test_loss,label="test loss")
-    ax.plot(epochs, test_acc, label="test accuracy")
-    ax.set_title("Training performance over epochs")
-    ax.legend()
+    ax=fig.subplots(2,1)
+    ax[0].plot(epochs,train_loss,c='b',label="training")
+    ax[1].plot(epochs, train_acc,c='b')
+    ax[0].plot(epochs,test_loss,c='g',label="test")
+    ax[1].plot(epochs, test_acc, c='g')
+    ax[0].set_title("Model loss over epochs")
+    ax[1].set_title("Model accuracy over epochs")
+    ax[0].legend(loc='upper right')
+    fig.tight_layout()
     fig.savefig(f'./output/{job_id}_trainfig.png')
 
     #Get confusion matrix
@@ -165,7 +168,8 @@ def get_output(job_id,model,testloader,classes):
        
     pred_labels=np.arange(0,10,1)
     disp= ConfusionMatrixDisplay.from_predictions(y_test,predictions,labels=pred_labels,display_labels=classes)
-    disp.plot().figure_.savefig(f'{job_id}_confusion_matrix.png')
+    disp.ax_.set_title(f"CM for model reached in epoch {best_epoch}, with accuracy {best_acc*100}%")
+    disp.plot().figure_.savefig(f'./output/{job_id}_confusion_matrix.png')
 
 
 
