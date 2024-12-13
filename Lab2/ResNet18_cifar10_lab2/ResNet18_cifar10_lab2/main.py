@@ -17,6 +17,9 @@ from utils import progress_bar
 from utils import get_output
 #import matplotlib.pyplot as plt
 
+#Get a dict for the different possible models
+model_functions= [ResNet18,Mod1]
+model_functions = { function.__name__ : function for function in model_functions}
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -24,6 +27,7 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--epochs','-e',default=50, type=int, help='Total amount of epochs' )
 parser.add_argument('--job_id',type=str,help='Job_id to write output files to')
+parser.add_argument('--func','-f',choices=model_functions.keys(),default='RestNet18',help="Chose one of the networks")
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -59,7 +63,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')
-net = ResNet18()
+net = model_functions[args.func]()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)

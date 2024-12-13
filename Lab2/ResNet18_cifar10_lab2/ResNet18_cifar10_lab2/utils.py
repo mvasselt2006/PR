@@ -129,10 +129,18 @@ def format_time(seconds):
     return f
 
 def get_output(job_id,model,testloader,classes):
+    #Load model
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    checkpoint = torch.load(f'./checkpoint/{job_id}_ckpt.pth')
+    model.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    best_epoch = checkpoint['epoch']
+
     #Get training graph
     train_loss,train_acc,test_loss,test_acc= np.loadtxt(f"./output/{job_id}_result.csv", unpack=True,delimiter=',')
     epochs=np.arange(0,np.shape(test_acc)[0],1)
     fig= plt.figure()
+    fig.suptitle(f"{best_acc*100}% accuracy at epoch {best_epoch}")
     ax=fig.subplots(2,1,sharex=True)
     ax[0].plot(epochs,train_loss,c='b',label="training")
     ax[1].plot(epochs, train_acc,c='b')
@@ -140,18 +148,12 @@ def get_output(job_id,model,testloader,classes):
     ax[1].plot(epochs, test_acc, c='g')
     ax[0].set_title("Model loss over epochs")
     ax[1].set_title("Model accuracy over epochs")
+
     ax[0].legend(loc='upper right')
     fig.tight_layout()
     fig.savefig(f'./output/{job_id}_trainfig.png')
 
     #Get confusion matrix
-
-    #Load model
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    checkpoint = torch.load(f'./checkpoint/{job_id}_ckpt.pth')
-    model.load_state_dict(checkpoint['net'])
-    best_acc = checkpoint['acc']
-    best_epoch = checkpoint['epoch']
 
     model.eval()
     y_test = []
