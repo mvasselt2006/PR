@@ -94,6 +94,7 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
+        #out.shape check output size with this
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -130,3 +131,8 @@ def test():
     print(y.size())
 
 # test()
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# model = ResNet18().to(device)
+# print(model)
+
+      

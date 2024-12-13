@@ -8,6 +8,7 @@
 # from .shufflenet import *
 # from .shufflenetv2 import *
 from .resnet import *
+from .own_model import *
 # from .resnext import *
 # from .preact_resnet import *
 # from .mobilenet import *
