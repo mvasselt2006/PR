@@ -132,6 +132,7 @@ def get_output(job_id,model,testloader,classes):
     #Load model
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     checkpoint = torch.load(f'./checkpoint/{job_id}_ckpt.pth')
+    #Load the weights
     model.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     best_epoch = checkpoint['epoch']
@@ -140,7 +141,7 @@ def get_output(job_id,model,testloader,classes):
     train_loss,train_acc,test_loss,test_acc= np.loadtxt(f"./output/{job_id}_result.csv", unpack=True,delimiter=',')
     epochs=np.arange(0,np.shape(test_acc)[0],1)
     fig= plt.figure()
-    fig.suptitle(f"{best_acc*100}% accuracy at epoch {best_epoch}")
+    fig.suptitle(f"{best_acc}% accuracy at epoch {best_epoch}")
     ax=fig.subplots(2,1,sharex=True)
     ax[0].plot(epochs,train_loss,c='b',label="training")
     ax[1].plot(epochs, train_acc,c='b')
@@ -158,6 +159,7 @@ def get_output(job_id,model,testloader,classes):
     model.eval()
     y_test = []
     predictions = []
+    #Get all predictions and true values
     with torch.no_grad():
         for (inputs, targets) in testloader:
             inputs, targets = inputs.to(device), targets.to(device)
@@ -166,8 +168,9 @@ def get_output(job_id,model,testloader,classes):
             for target_i, pred_i in zip(targets,predicted):
                 y_test.append(int(target_i))
                 predictions.append(int(pred_i))
-       
+  
     pred_labels=np.arange(0,10,1)
+    #Compare predictions and true values in confusion matrix function from sci-kit learn
     disp= ConfusionMatrixDisplay.from_predictions(y_test,predictions,labels=pred_labels,display_labels=classes)
     disp.ax_.set_title(f"CM for model reached in epoch {best_epoch}, with accuracy {best_acc*100}%")
     disp.plot().figure_.savefig(f'./output/{job_id}_confusion_matrix.png')

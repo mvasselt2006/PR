@@ -15,7 +15,6 @@ import numpy as np
 from models import *
 from utils import progress_bar
 from utils import get_output
-#import matplotlib.pyplot as plt
 
 #Get a dict for the different possible models
 model_functions= [ResNet18,Mod1]
@@ -151,10 +150,11 @@ if __name__ == "__main__":
     for epoch in range(start_epoch, tot_epoch+start_epoch):
         train(epoch)
         test(epoch)
-        #scheduler.step()
     job_id=args.job_id
     #Define output dir
     if not os.path.isdir('output'):
         os.mkdir('output')
+    #Save training data
     np.savetxt(f"./output/{job_id}_result.csv", train_result, delimiter=",")
+    #Get training plot and confusion matrix
     get_output(job_id,net,testloader,classes)
