@@ -26,7 +26,7 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--epochs','-e',default=50, type=int, help='Total amount of epochs' )
 parser.add_argument('--job_id',type=str,help='Job_id to write output files to')
-parser.add_argument('--func','-f',choices=model_functions.keys(),default='RestNet18',help="Chose one of the networks")
+parser.add_argument('--func','-f',choices=model_functions.keys(),default='ResNet18',help="Chose one of the networks")
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
