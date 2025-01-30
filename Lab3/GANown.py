@@ -6,6 +6,7 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 from torchvision.utils import save_image
 import torch.nn.functional as F
+import numpy as np
 
 # hyper-parameters configurations
 image_size = 32 # we need to resize image to 32X32
@@ -209,8 +210,8 @@ if __name__ == "__main__":
         save_image(generated_img, f"outputs/gen_img{epoch}.png", normalize=True)           # so in this folder the images can be viewed during running
         epoch_loss_g = loss_g / batch_idx # total generator loss for the epoch
         epoch_loss_d = loss_d / batch_idx # total discriminator loss for the epoch
-        losses_g.append(epoch_loss_g)
-        losses_d.append(epoch_loss_d)
+        losses_g.append(epoch_loss_g.cpu().detach().numpy())
+        losses_d.append(epoch_loss_d.cpu().detach().numpy())
         print(f"Epoch {epoch+1} of {epochs}")
         print(f"Generator loss: {epoch_loss_g:.8f}, Discriminator loss: {epoch_loss_d:.8f}")
 
