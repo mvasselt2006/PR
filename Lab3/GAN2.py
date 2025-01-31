@@ -15,7 +15,7 @@ nz = 100 # latent vector size
 beta1 = 0.5 # beta1 value for Adam optimizer
 lr = 0.0001 # learning rate  # in paper 0.0002 is used
 sample_size = 32 # fixed sample size
-epochs = 100 # number of epoch to train
+epochs = 30 # number of epoch to train
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # image transformations
@@ -35,8 +35,69 @@ trainloader = torch.utils.data.DataLoader(
 
 # generator
 class Generator(nn.Module):
+    def __init__(self, nz):
+        super(Generator, self).__init__()
+        self.nz = nz # the input noise vector
+
+        # the rest of the codes to be filled ...
+
+        # optie 1
+        def block(in_feat, out_feat, norm=True, stride=2, padding=1):
+            if norm:
+                return nn.Sequential(
+                    nn.ConvTranspose2d(in_feat, out_feat, kernel_size=4, stride=stride, padding=padding, bias=False),
+                    nn.BatchNorm2d(out_feat),  # Normalizes activations
+                    nn.ReLU(inplace=True)
+                )
+            else:
+                return nn.Sequential(
+                    nn.ConvTranspose2d(in_feat, out_feat, kernel_size=4, stride=stride, padding=padding, bias=False),
+                    nn.ReLU(inplace=True)
+                )
+            
+        self.model = nn.Sequential(
+            block(nz, 128, norm=False, stride=1, padding=0), 
+            block(128, 64),
+            block(64, 32),
+            nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.Tanh()
+        )
+
+        # optie 2
+        # self.block_in = nn.Sequential(
+        #     nn.ConvTranspose2d(nz, 128, kernel_size=4, stride=2, padding=1, bias=False), 
+        #     nn.ReLU(inplace=True)) #activation function
+        
+        # self.block_mid1 = nn.Sequential(
+        #     nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, bias=False),
+        #     nn.BatchNorm2d(64),  # Normalizes activations
+        #     nn.ReLU(inplace=True))
+        
+        # self.block_mid2 = nn.Sequential(
+        #     nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1, bias=False),
+        #     nn.BatchNorm2d(out_feat),  # Normalizes activations
+        #     nn.ReLU(inplace=True))
+        
+        # self.block_out = nn.Sequential(
+        #     nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1, bias=False),
+        #     nn.BatchNorm2d(1),  # Normalizes activations
+        #     nn.Tanh())
+
+    def forward(self, noise_input):
+        # optie 1
+        return self.model(noise_input)
+
+        # # optie 2
+        # x = self.block_in(x)
+        # x = self.block_mid1(x)
+        # x = self.block_mid2(x)
+        # x = self.block_out(x)
+        # return x
+
+# discriminator
+class Discriminator(nn.Module):
     def __init__(self):
-        super().__init__()
+        super(Discriminator, self).__init__()
         #Convolutional layers
         self.conv1 = nn.Conv2d(3, 64, kernel_size=5,stride=1,padding=2,bias=False)
         self.conv2= nn.Conv2d(64,128, kernel_size=3,stride=1,padding=1,bias=True)
@@ -50,7 +111,7 @@ class Generator(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(512)
 
-        #Linear operations to reduces to final classification
+        #Linear operations to reduce to classification
         self.fc1 = nn.Linear(512 * 7* 7, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 1)
@@ -66,39 +127,8 @@ class Generator(nn.Module):
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.sigmoid(self.fc3(x)) #Reduce to float
+        x = F.sigmoid(self.fc3(x))#Reduce to float
         return x
-
-# discriminator
-class Discriminator(nn.Module):
-    def __init__(self):
-        super(Discriminator, self).__init__()
-        
-        # the rest of the codes to be filled ...
-        def block(in_feat, out_feat, norm=True):
-                if norm:
-                    return nn.Sequential(
-                        nn.Conv2d(in_feat, out_feat, kernel_size=4, stride=2, padding=1, bias=False),
-                        nn.BatchNorm2d(out_feat),  # Normalizes activations
-                        nn.LeakyReLU(inplace=True)
-                    )
-                else:
-                    return nn.Sequential(
-                        nn.Conv2d(in_feat, out_feat, kernel_size=4, stride=2, padding=1, bias=False),
-                        nn.LeakyReLU(inplace=True)
-                    )
-
-            
-        self.model = nn.Sequential(
-            block(3, 32, norm=False),
-            block(32, 64),
-            block(64, 128),
-            nn.Conv2d(128, 1, kernel_size=4, stride=1, padding=0, bias=False),  #have to look into why stride and padding this way
-            nn.Sigmoid()
-        )
-
-    def forward(self, image):
-        return self.model(image)   #see some things about flattening the image, might be needed here
 
 
 # train the network
