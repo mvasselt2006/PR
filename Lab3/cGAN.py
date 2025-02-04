@@ -158,9 +158,9 @@ losses_d = []
 def create_noise(sample_size,nz):
   return torch.randn(sample_size,nz,1,1).to(device)
 def create_label(sample_size):
-  labels =torch.randint(low=0,high=9,size=(sample_size,1)).to(device)
+  labels =torch.randint(low=0,high=9,size=(sample_size,1))
   label_vector= F.one_hot(labels,num_classes=10)
-  return label_vector
+  return label_vector.to(device)
 
 # function to train the discriminator network
 def train_discriminator(optimizer, data_real, data_fake,labels):
@@ -217,6 +217,7 @@ if __name__ == "__main__":
             image, label = data
             image = image.to(device)
             b_size = len(image)
+            label=label.to(device)
 
             #Change to one-hot
             label_vector= F.one_hot(label,num_classes=10)
