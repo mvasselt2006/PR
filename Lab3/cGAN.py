@@ -28,9 +28,6 @@ transform = transforms.Compose([
 ])
 
 # dataset
-# trainset = torchvision.datasets.CIFAR10(
-#     root='./data', train=True, download=True, transform=transform, 
-#     target_transform=transforms.Lambda(lambda y: torch.zeros(10, dtype=torch.float).scatter_(0, torch.tensor(y), value=1)))
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(
@@ -66,37 +63,8 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1, bias=False),
             nn.Tanh()
         )
-
-        # optie 2
-        # self.block_in = nn.Sequential(
-        #     nn.ConvTranspose2d(nz, 128, kernel_size=4, stride=2, padding=1, bias=False), 
-        #     nn.ReLU(inplace=True)) #activation function
-        
-        # self.block_mid1 = nn.Sequential(
-        #     nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, bias=False),
-        #     nn.BatchNorm2d(64),  # Normalizes activations
-        #     nn.ReLU(inplace=True))
-        
-        # self.block_mid2 = nn.Sequential(
-        #     nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1, bias=False),
-        #     nn.BatchNorm2d(out_feat),  # Normalizes activations
-        #     nn.ReLU(inplace=True))
-        
-        # self.block_out = nn.Sequential(
-        #     nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1, bias=False),
-        #     nn.BatchNorm2d(1),  # Normalizes activations
-        #     nn.Tanh())
-
     def forward(self, noise_input):
-        # optie 1
         return self.model(noise_input)
-
-        # # optie 2
-        # x = self.block_in(x)
-        # x = self.block_mid1(x)
-        # x = self.block_mid2(x)
-        # x = self.block_out(x)
-        # return x
 
 # discriminator
 class Discriminator(nn.Module):
