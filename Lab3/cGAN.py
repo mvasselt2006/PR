@@ -132,7 +132,7 @@ class Discriminator(nn.Module):
         image = self.model(image)
         image_cat= torch.cat((image, labels),axis=1)
         x = torch.flatten(image_cat, 1) # flatten all dimensions except batch
-        x = F.sigmoid(self.fc1(x))
+        x = F.binary_cross_entropy(self.fc1(x))
 
         return x  #see some things about flattening the image, might be needed here
 
